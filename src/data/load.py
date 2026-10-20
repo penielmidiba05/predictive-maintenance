@@ -13,7 +13,7 @@ FEATURE_SENSORS = [c for c in SENSOR_COLS if c not in CONSTANT_SENSORS]
 
 def load_cmapss(split: str, subset: str = "FD001", raw_dir: Path = RAW_DIR ) -> pd.DataFrame:
     if split not in {"train", "test"}:
-        raise ValueError(f"split doit etre train ou test, reçu: {slpit!r}")
+        raise ValueError(f"split doit etre train ou test, reçu: {split!r}")
     path = Path(raw_dir)/ f"{split}_{subset}.txt"
     return pd.read_csv(path, sep=r"\s+", header= None, names = COLUMNS)
 
