@@ -223,3 +223,6 @@ __marimo__/
 data7
 mlruns/
 mlartifacts/
+
+mlflow.db
+models/

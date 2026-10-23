@@ -13,3 +13,5 @@ uvicorn
 pydantic
 pytest
 ruff
+pyyaml
+joblib
