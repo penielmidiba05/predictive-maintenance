@@ -19,6 +19,31 @@ Le seuil minimise un coût où une panne ratée vaut 10 fois une maintenance inu
 
 **Limites** : 20 moteurs de test seulement ; données simulées (FD001, une seule condition de vol) ; coût compté par cycle et non par moteur.
 
+
+
+## Installation (Linux / WSL2)
+
+    python3 -m venv .venv
+    source .venv/bin/activate
+    pip install -r requirements.txt
+    pre-commit install
+
+Placer `train_FD001.txt`, `test_FD001.txt` et `RUL_FD001.txt` (NASA C-MAPSS) dans `data/raw/`.
+
+## Commandes
+
+| Action | Commande |
+|---|---|
+| Tests | `python -m pytest` |
+| Comparer les modèles | `python -m src.models.train` |
+| Tuning LightGBM | `python -m src.models.tune --n-trials 30` |
+| Évaluation finale | `python -m src.models.evaluate --model lightgbm --params configs/lightgbm_best.yaml` |
+| Interprétabilité SHAP | `python -m src.evaluation.explain` |
+| Interface MLflow | `mlflow ui --backend-store-uri sqlite:///mlflow.db` |
+| Image Docker | `docker build -t predictive-maintenance:0.2.0 .` |
+| Lancer l'API | `docker run --rm -p 8000:8000 predictive-maintenance:0.2.0` |
+
+
 ## Interprétabilité (SHAP)
 
 Valeurs SHAP calculées avec `TreeExplainer` sur les 20 moteurs de test (`python -m src.evaluation.explain`). Pour LightGBM, elles sont exprimées en log-odds : une valeur positive pousse la prédiction vers « panne dans les 30 cycles », une valeur négative l'en éloigne.

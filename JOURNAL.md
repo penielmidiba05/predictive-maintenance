@@ -86,3 +86,42 @@
 
 **Prochaine étape**
 - Semaine 3 : installer WSL2 pour débloquer SHAP, tests supplémentaires (schéma des données, modèle), interprétabilité SHAP, logging, ruff et pre-commit, Dockerfile.
+
+## Semaine 3 — 9-16 novembre 2026
+
+**Fait**
+- Migration vers Linux : WSL2 + Ubuntu 24.04, projet cloné dans `~/dev`, environnement recréé, VS Code connecté à WSL
+- Docker Desktop installé (backend WSL2), limite mémoire de WSL fixée à 8 Go
+- `pyproject.toml` (config pytest et ruff), ruff (lint et format), pre-commit
+- `src/models/predict.py` : prédiction à partir de données brutes, avec les mêmes features et le seuil du bundle
+- Nouveaux tests : schéma des données (4) et modèle (4), dont un test de reproductibilité du score publié → 26 tests verts
+- Interprétabilité SHAP (`src/evaluation/explain.py`) : vue globale, importance par capteur, explication locale
+- Logging : `src/logging_config.py`, plus aucun `print` dans `src/`
+- Dockerfile, `.dockerignore`, `requirements-api.txt` et API minimale (`/health`) : image `predictive-maintenance:0.2.0`
+
+**Résultats**
+- Reproductibilité : modèle régénéré sous Linux avec la même config → [aucune différence / écarts minimes] dans `reports/test_results.json`
+- SHAP : capteurs les plus influents s_11, s_3, s_4 et s_15 ; aucune valeur brute dans le top 15 (que des moyennes glissantes et des écarts-types sur 20 cycles)
+- Capteurs qui augmentent avant la panne : s_11, s_3, s_4, s_15 ; qui diminuent : s_12, s_20 (cohérent avec l'EDA de la semaine 0)
+- Image Docker : [694Mo] ; reconstruction après modification du code en 2,3 s grâce au cache
+
+**Bloqué**
+- SHAP bloqué par le contrôle des applications Windows → résolu en passant sous WSL2
+- Clonage : `ton-pseudo` laissé dans l'URL, et chemin du gestionnaire d'identifiants Windows introuvable. GitHub refuse les mots de passe → connexion avec `gh auth login`
+- pre-commit a modifié `data/raw/*.txt` : les données étaient suivies par Git depuis un ancien commit. Corrigé avec `git rm -r --cached data` et fichiers bruts restaurés depuis la copie Windows
+- `E501 Line too long` : docstring de plus de 100 caractères, que ruff format ne coupe pas → raccourcie à la main
+- Commits annulés par pre-commit : fichiers reformatés ou modifiés après le `git add`
+- `Could not import module "app.main"` : `main.py` créé à la racine au lieu de `app/`, puis image à reconstruire
+
+**Appris**
+- WSL2 fait tourner un vrai Linux dans Windows ; le projet doit être dans `~/dev`, pas dans `/mnt/c/`, pour les performances
+- Un `.gitignore` n'agit pas sur les fichiers déjà suivis : il faut `git rm --cached` (l'ancienne version reste dans l'historique)
+- Les données brutes ne se modifient jamais
+- pre-commit bloque le commit quand il corrige un fichier : on vérifie, on fait `git add`, on recommite. Routine : `ruff format .`, `ruff check .`, `git add`, `git commit`
+- Tester la reproductibilité du score publié est plus utile qu'un seuil arbitraire de performance
+- SHAP répartit le mérite entre features corrélées → regrouper par capteur ; SHAP explique le modèle, pas la cause physique
+- `logging` plutôt que `print` : niveaux, heure, module d'origine, redirection possible
+- Docker : image = photo figée du projet, à reconstruire après chaque modification ; dépendances copiées avant le code pour profiter du cache ; versions exactes pour recharger le modèle ; ne pas tourner en root
+
+**Prochaine étape**
+- Semaine 4 : API FastAPI complète (`POST /predict`, `GET /model`), schémas Pydantic, tests de l'API, CI GitHub Actions, README final et démo → Predictive Maintenance v1.0
