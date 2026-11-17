@@ -1,5 +1,6 @@
 import argparse
 import json
+import logging
 from pathlib import Path
 
 import joblib
@@ -9,11 +10,15 @@ from src.config import load_config
 from src.data.dataset import load_dev_test
 from src.evaluation.cv import cross_validated_proba
 from src.evaluation.metrics import classification_metrics
+from src.logging_config import setup_logging
 from src.models.factory import make_model
 from src.models.threshold import best_threshold
 
+logger = logging.getLogger(__name__)
+
 
 def main(config_path: str, model_name: str, params_path: str | None) -> None:
+    setup_logging()
     cfg = load_config(config_path)
     params = load_config(params_path) if params_path else cfg["models"][model_name]
     mlflow.set_tracking_uri(cfg["tracking_uri"])
@@ -22,6 +27,7 @@ def main(config_path: str, model_name: str, params_path: str | None) -> None:
     dev, test, feature_cols = load_dev_test(cfg)
     X_dev, y_dev, g_dev = dev[feature_cols], dev["target"], dev["unit_id"]
     model = make_model(model_name, params, cfg["seed"])
+    logger.info("Évaluation finale du modèle : %s", model_name)  # ← logging
 
     # 1. Seuil choisi sur les 80 moteurs de développement (prédictions hors pli)
     oof, fold_scores = cross_validated_proba(model, X_dev, y_dev, g_dev, cfg["cv_folds"])
@@ -66,7 +72,9 @@ def main(config_path: str, model_name: str, params_path: str | None) -> None:
         mlflow.log_artifact("models/model.joblib")
         mlflow.log_artifact("reports/test_results.json")
 
-    print(json.dumps(results, indent=2, ensure_ascii=False))
+    logger.info(  # ← logging
+        "Résultats :\n%s", json.dumps(results, indent=2, ensure_ascii=False)
+    )
 
 
 if __name__ == "__main__":

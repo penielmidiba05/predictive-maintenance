@@ -1,4 +1,5 @@
 import argparse
+import logging  # ← logging
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -7,7 +8,10 @@ import shap
 
 from src.config import load_config
 from src.data.dataset import load_dev_test
+from src.logging_config import setup_logging
 from src.models.predict import load_bundle
+
+logger = logging.getLogger(__name__)
 
 FIG_DIR = Path("reports/figures")
 
@@ -18,10 +22,12 @@ def sensor_of(feature: str) -> str:
 
 
 def main(config_path: str) -> None:
+    setup_logging()
     cfg = load_config(config_path)
     bundle = load_bundle()
     _, test, _ = load_dev_test(cfg)
     X = test[bundle["feature_columns"]]
+    logger.info("Calcul des valeurs SHAP sur %d lignes", len(X))  # ← logging
 
     explainer = shap.TreeExplainer(bundle["model"])
     sv = explainer(X)
@@ -53,9 +59,9 @@ def main(config_path: str) -> None:
     plt.savefig(FIG_DIR / "shap_waterfall_rul10.png", dpi=150, bbox_inches="tight")
     plt.close()
 
-    print("Capteurs les plus influents :")
-    print(by_sensor.sort_values(ascending=False).head(5).round(3).to_string())
-    print(f"Figures enregistrées dans {FIG_DIR}/")
+    top = by_sensor.sort_values(ascending=False).head(5).round(3).to_string()
+    logger.info("Capteurs les plus influents :\n%s", top)  # ← logging
+    logger.info("Figures enregistrées dans %s/", FIG_DIR)  # ← logging
 
 
 if __name__ == "__main__":

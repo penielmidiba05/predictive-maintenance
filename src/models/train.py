@@ -1,4 +1,5 @@
 import argparse
+import logging
 
 import matplotlib.pyplot as plt
 import mlflow
@@ -9,22 +10,28 @@ from src.config import load_config
 from src.data.dataset import load_dev_test
 from src.evaluation.cv import cross_validated_proba
 from src.evaluation.metrics import classification_metrics
+from src.logging_config import setup_logging
 from src.models.factory import make_model
 from src.models.threshold import best_threshold
 
+logger = logging.getLogger(__name__)
+
 
 def main(config_path: str) -> None:
+    setup_logging()  # ← logging
     cfg = load_config(config_path)
     mlflow.set_tracking_uri(cfg["tracking_uri"])
     mlflow.set_experiment(cfg["experiment_name"])
 
     dev, _, feature_cols = load_dev_test(cfg)  # le test (_) n'est PAS utilisé ici
     X, y, groups = dev[feature_cols], dev["target"], dev["unit_id"]
-    print(f"{len(X)} lignes, {X.shape[1]} features, {groups.nunique()} moteurs")
+    logger.info(  # ← logging
+        "%d lignes, %d features, %d moteurs", len(X), X.shape[1], groups.nunique()
+    )
 
     summary = []
     for name, params in cfg["models"].items():
-        print(f"Entraînement : {name}…")
+        logger.info("Entraînement : %s", name)  # ← logging
         with mlflow.start_run(run_name=name):
             model = make_model(name, params, cfg["seed"])
             oof, fold_scores = cross_validated_proba(model, X, y, groups, cfg["cv_folds"])
@@ -70,7 +77,8 @@ def main(config_path: str) -> None:
             }
         )
 
-    print(pd.DataFrame(summary).round(3).to_string(index=False))
+    table = pd.DataFrame(summary).round(3).to_string(index=False)
+    logger.info("Résultats :\n%s", table)  # ← logging
 
 
 if __name__ == "__main__":

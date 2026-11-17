@@ -1,4 +1,5 @@
 import argparse
+import logging  # ← logging
 
 import mlflow
 import optuna
@@ -7,16 +8,21 @@ import yaml
 from src.config import load_config
 from src.data.dataset import load_dev_test
 from src.evaluation.cv import cross_validated_proba
+from src.logging_config import setup_logging
 from src.models.factory import make_model
+
+logger = logging.getLogger(__name__)
 
 
 def main(config_path: str, n_trials: int, output_path: str) -> None:
+    setup_logging()
     cfg = load_config(config_path)
     mlflow.set_tracking_uri(cfg["tracking_uri"])
     mlflow.set_experiment(cfg["experiment_name"])
 
     dev, _, feature_cols = load_dev_test(cfg)
     X, y, groups = dev[feature_cols], dev["target"], dev["unit_id"]
+    logger.info("Tuning de LightGBM : %d essais", n_trials)  # ← logging
 
     def objective(trial: optuna.Trial) -> float:
         params = {
@@ -56,8 +62,8 @@ def main(config_path: str, n_trials: int, output_path: str) -> None:
     with open(output_path, "w", encoding="utf-8") as f:
         yaml.safe_dump(best_params, f, sort_keys=False)
 
-    print(f"Meilleure PR-AUC (validation croisée) : {study.best_value:.3f}")
-    print(f"Paramètres sauvegardés dans {output_path}")
+    logger.info("Meilleure PR-AUC (validation croisée) : %.3f", study.best_value)  # ← logging
+    logger.info("Paramètres sauvegardés dans %s", output_path)  # ← logging
 
 
 if __name__ == "__main__":
