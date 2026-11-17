@@ -9,10 +9,12 @@ from src.data.labels import make_labels
 @pytest.fixture
 def toy_df():
     """Moteur 1 : 5 cycles. Moteur 2 : 3 cycles."""
-    return pd.DataFrame({
-        "unit_id": [1, 1, 1, 1, 1, 2, 2, 2],
-        "cycle":   [1, 2, 3, 4, 5, 1, 2, 3],
-    })
+    return pd.DataFrame(
+        {
+            "unit_id": [1, 1, 1, 1, 1, 2, 2, 2],
+            "cycle": [1, 2, 3, 4, 5, 1, 2, 3],
+        }
+    )
 
 
 def test_rul_values(toy_df):
@@ -48,7 +50,7 @@ DATA = Path(__file__).resolve().parents[1] / "data" / "raw" / "train_FD001.txt"
 @pytest.mark.skipif(not DATA.exists(), reason="données absentes (ex. sur la CI)")
 def test_positive_count_on_real_data():
     from src.data.load import load_cmapss
+
     out = make_labels(load_cmapss("train"), horizon=30)
     # chaque moteur a exactement 31 cycles avec RUL entre 0 et 30
     assert out["target"].sum() == 100 * 31
-    

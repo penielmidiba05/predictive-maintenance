@@ -17,7 +17,5 @@ def make_model(name: str, params: dict, seed: int = 42):
             class_weight="balanced", n_jobs=-1, random_state=seed, **params
         )
     if name == "lightgbm":
-        return LGBMClassifier(
-            class_weight="balanced", random_state=seed, verbose=-1, **params
-        )
+        return LGBMClassifier(class_weight="balanced", random_state=seed, verbose=-1, **params)
     raise ValueError(f"Modèle inconnu : {name!r}")

@@ -7,11 +7,13 @@ from src.features.build import build_features, feature_columns
 @pytest.fixture
 def toy_df():
     """Un seul capteur 's_a'. Moteur 1 : 4 cycles. Moteur 2 : 2 cycles."""
-    return pd.DataFrame({
-        "unit_id": [1, 1, 1, 1, 2, 2],
-        "cycle":   [1, 2, 3, 4, 1, 2],
-        "s_a":     [1.0, 2.0, 3.0, 4.0, 10.0, 20.0],
-    })
+    return pd.DataFrame(
+        {
+            "unit_id": [1, 1, 1, 1, 2, 2],
+            "cycle": [1, 2, 3, 4, 1, 2],
+            "s_a": [1.0, 2.0, 3.0, 4.0, 10.0, 20.0],
+        }
+    )
 
 
 def test_rolling_mean_values(toy_df):

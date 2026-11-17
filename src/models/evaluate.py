@@ -38,15 +38,21 @@ def main(config_path: str, model_name: str, params_path: str | None) -> None:
     # 4. Sauvegarde du modèle et de tout ce qu'il faut pour l'utiliser
     Path("models").mkdir(exist_ok=True)
     bundle = {
-        "model": model, "model_name": model_name, "params": params,
-        "threshold": threshold, "feature_columns": feature_cols,
-        "windows": cfg["windows"], "horizon": cfg["horizon"],
+        "model": model,
+        "model_name": model_name,
+        "params": params,
+        "threshold": threshold,
+        "feature_columns": feature_cols,
+        "windows": cfg["windows"],
+        "horizon": cfg["horizon"],
     }
     joblib.dump(bundle, "models/model.joblib")
 
     results = {
-        "model": model_name, "threshold": threshold,
-        "cv": cv_metrics, "cv_pr_auc_fold_std": float(fold_scores.std()),
+        "model": model_name,
+        "threshold": threshold,
+        "cv": cv_metrics,
+        "cv_pr_auc_fold_std": float(fold_scores.std()),
         "test": test_metrics,
     }
     Path("reports").mkdir(exist_ok=True)
@@ -67,6 +73,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Évaluation finale sur les 20 moteurs de test.")
     parser.add_argument("--config", default="configs/train.yaml")
     parser.add_argument("--model", default="lightgbm")
-    parser.add_argument("--params", default=None, help="YAML de paramètres (ex. configs/lightgbm_best.yaml)")
+    parser.add_argument(
+        "--params", default=None, help="YAML de paramètres (ex. configs/lightgbm_best.yaml)"
+    )
     args = parser.parse_args()
     main(args.config, args.model, args.params)

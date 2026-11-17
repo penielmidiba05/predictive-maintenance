@@ -1,0 +1,16 @@
+[project]
+name = "predictive-maintenance"
+version = "0.2.0"
+description = "Prédiction de panne de moteurs à partir de capteurs (NASA C-MAPSS)"
+requires-python = ">=3.11"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+extend-exclude = ["notebooks"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]

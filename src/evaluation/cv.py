@@ -5,7 +5,9 @@ from sklearn.metrics import average_precision_score
 from sklearn.model_selection import GroupKFold
 
 
-def cross_validated_proba(model, X: pd.DataFrame, y: pd.Series, groups: pd.Series, n_splits: int = 5):
+def cross_validated_proba(
+    model, X: pd.DataFrame, y: pd.Series, groups: pd.Series, n_splits: int = 5
+):
     """Validation croisée groupée par moteur.
 
     Renvoie :

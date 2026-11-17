@@ -1,7 +1,5 @@
 import argparse
 
-import matplotlib
-matplotlib.use("Agg")  # génère les graphiques sans les afficher
 import matplotlib.pyplot as plt
 import mlflow
 import pandas as pd
@@ -20,7 +18,7 @@ def main(config_path: str) -> None:
     mlflow.set_tracking_uri(cfg["tracking_uri"])
     mlflow.set_experiment(cfg["experiment_name"])
 
-    dev, _, feature_cols = load_dev_test(cfg)   # le test (_) n'est PAS utilisé ici
+    dev, _, feature_cols = load_dev_test(cfg)  # le test (_) n'est PAS utilisé ici
     X, y, groups = dev[feature_cols], dev["target"], dev["unit_id"]
     print(f"{len(X)} lignes, {X.shape[1]} features, {groups.nunique()} moteurs")
 
@@ -33,19 +31,26 @@ def main(config_path: str) -> None:
             threshold, cost = best_threshold(y, oof, cfg["cost_fn"], cfg["cost_fp"])
             metrics = classification_metrics(y, oof, threshold)
 
-            mlflow.log_params({
-                "model": name, **params,
-                "horizon": cfg["horizon"], "windows": str(cfg["windows"]),
-                "n_features": len(feature_cols),
-                "cost_fn": cfg["cost_fn"], "cost_fp": cfg["cost_fp"],
-            })
-            mlflow.log_metrics({
-                **{f"cv_{k}": v for k, v in metrics.items()},
-                "cv_pr_auc_fold_mean": float(fold_scores.mean()),
-                "cv_pr_auc_fold_std": float(fold_scores.std()),
-                "threshold": threshold,
-                "cost": cost,
-            })
+            mlflow.log_params(
+                {
+                    "model": name,
+                    **params,
+                    "horizon": cfg["horizon"],
+                    "windows": str(cfg["windows"]),
+                    "n_features": len(feature_cols),
+                    "cost_fn": cfg["cost_fn"],
+                    "cost_fp": cfg["cost_fp"],
+                }
+            )
+            mlflow.log_metrics(
+                {
+                    **{f"cv_{k}": v for k, v in metrics.items()},
+                    "cv_pr_auc_fold_mean": float(fold_scores.mean()),
+                    "cv_pr_auc_fold_std": float(fold_scores.std()),
+                    "threshold": threshold,
+                    "cost": cost,
+                }
+            )
 
             fig, ax = plt.subplots(figsize=(6, 5))
             PrecisionRecallDisplay.from_predictions(y, oof, ax=ax, name=name)
@@ -53,17 +58,24 @@ def main(config_path: str) -> None:
             mlflow.log_figure(fig, "pr_curve.png")
             plt.close(fig)
 
-        summary.append({
-            "modèle": name,
-            "PR-AUC": fold_scores.mean(), "± écart-type": fold_scores.std(),
-            "seuil": threshold, "rappel": metrics["recall"],
-            "précision": metrics["precision"], "coût": cost,
-        })
+        summary.append(
+            {
+                "modèle": name,
+                "PR-AUC": fold_scores.mean(),
+                "± écart-type": fold_scores.std(),
+                "seuil": threshold,
+                "rappel": metrics["recall"],
+                "précision": metrics["precision"],
+                "coût": cost,
+            }
+        )
 
     print(pd.DataFrame(summary).round(3).to_string(index=False))
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Compare les modèles en validation croisée groupée.")
+    parser = argparse.ArgumentParser(
+        description="Compare les modèles en validation croisée groupée."
+    )
     parser.add_argument("--config", default="configs/train.yaml")
     main(parser.parse_args().config)

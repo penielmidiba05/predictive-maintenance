@@ -33,10 +33,12 @@ def main(config_path: str, n_trials: int, output_path: str) -> None:
             model = make_model("lightgbm", params, cfg["seed"])
             _, fold_scores = cross_validated_proba(model, X, y, groups, cfg["cv_folds"])
             mlflow.log_params(params)
-            mlflow.log_metrics({
-                "cv_pr_auc_fold_mean": float(fold_scores.mean()),
-                "cv_pr_auc_fold_std": float(fold_scores.std()),
-            })
+            mlflow.log_metrics(
+                {
+                    "cv_pr_auc_fold_mean": float(fold_scores.mean()),
+                    "cv_pr_auc_fold_std": float(fold_scores.std()),
+                }
+            )
         return float(fold_scores.mean())
 
     optuna.logging.set_verbosity(optuna.logging.WARNING)
